@@ -1,6 +1,6 @@
 <?php
 require_once 'session.php';
-if (empty($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'bendahara'])) {
+if (empty($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'bendahara', 'marbot'])) {
     die("Akses ditolak");
 }
 
