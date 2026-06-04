@@ -743,7 +743,7 @@ class proses extends fb {
 	}
 	
 	private function keuangan() {
-		if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'bendahara') $this->retError("Akses ditolak");
+		if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'bendahara' && $_SESSION['role'] !== 'marbot') $this->retError("Akses ditolak");
 		ob_start();
 		try {
 			$pdo = getDbConnection();
