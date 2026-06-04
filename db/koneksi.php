@@ -71,7 +71,7 @@ function loadDatabase() {
             $formatTanggal = date('d ', $tgl) . $bulan[(int)date('m', $tgl)] . date(' Y', $tgl);
             
             $infoArr[] = [
-                "Petugas Shalat Jum'at:",
+                "Petugas Shalat Jum'at",
                 $jumatRow['khatib'] . " (Imam/Khatib)\n" . $jumatRow['muadzin'] . " (Muadzin/Bilal)",
                 "Jum'at, " . $formatTanggal,
                 true

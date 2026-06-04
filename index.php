@@ -31,8 +31,8 @@
 	
 	// Inject slide informasi saldo kas otomatis
 	$db['info'][] = [
-		"Informasi Keuangan Masjid:",
-		"Total Saldo Kas Saat Ini:\nRp " . number_format($saldoKas, 0, ',', '.'),
+		"Informasi Keuangan Masjid",
+		"Total Saldo Kas Saat Ini\nRp " . number_format($saldoKas, 0, ',', '.'),
 		"Semoga Allah membalas amal jariyah para jamaah",
 		true
 	];
