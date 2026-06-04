@@ -271,6 +271,7 @@ class proses extends fb {
 		}
 
 		if ($id == 'import_csv_keuangan') {
+			if ($_SESSION['role'] !== 'admin') $this->retError('Akses ditolak: Hanya Admin yang dapat mengimpor data.');
 			if (isset($_FILES['file_csv']) && $_FILES['file_csv']['error'] == UPLOAD_ERR_OK) {
 				$fileTmpPath = $_FILES['file_csv']['tmp_name'];
 				$file = fopen($fileTmpPath, 'r');
@@ -543,6 +544,7 @@ class proses extends fb {
 		}
 
 		if ($id == 'keuangan_all') {
+			if ($_SESSION['role'] !== 'admin') $this->retError('Akses ditolak: Hanya Admin yang dapat mengosongkan data.');
 			try {
 				$pdo = getDbConnection();
 				$pdo->exec("TRUNCATE TABLE keuangan");
@@ -777,8 +779,10 @@ class proses extends fb {
 						<div class="box-header with-border">
 							<h3 class="box-title">Buku Kas Keuangan</h3>
 							<div class="box-tools pull-right">
+								<?php if ($_SESSION['role'] === 'admin'): ?>
 								<button type="button" class="btn btn-sm btn-danger" onclick="resetKeuangan()"><i class="fa fa-trash"></i> Kosongkan Data</button>
 								<button type="button" class="btn btn-sm btn-success" onclick="$('#modalImportCsv').modal('show')"><i class="fa fa-file-excel-o"></i> Import CSV</button>
+								<?php endif; ?>
 								<button type="button" class="btn btn-sm btn-info" onclick="openModalCetak()"><i class="fa fa-print"></i> Cetak Laporan</button>
 								<button type="button" class="btn btn-sm btn-primary" onclick="openModalKeuangan('new', '<?=date('Y-m-d')?>', 'pemasukan', 'Tunai', '', '')"><i class="fa fa-plus"></i> Tambah Transaksi</button>
 							</div>
