@@ -1,0 +1,15 @@
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Log Files
+*.log
+error_log
+
+# Uploads (Keep the directory, ignore the files if any, but we will track default images)
+# Usually we ignore user-uploaded images, but since bg.jpg and logo.png are defaults, we can leave them tracked.
+# If there are other dynamic uploads in the future, add them here.

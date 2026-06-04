@@ -1,0 +1,14 @@
+Options -Indexes
+ServerSignature Off
+
+# Melindungi file konfigurasi dan log
+<FilesMatch "\.(ini|log|txt|md|sql)$">
+    Require all denied
+</FilesMatch>
+
+# Perlindungan XSS dasar & clickjacking via Header (Opsional/Sesuai konfigurasi Apache)
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header always append X-Frame-Options SAMEORIGIN
+    Header set X-Content-Type-Options nosniff
+</IfModule>
