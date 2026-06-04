@@ -20,7 +20,8 @@ $lokasiMasjid = $settings['lokasi'] ?? '';
 // Kita ambil berdasarkan tahun ini saja atau semua data yang ada diurutkan dari yang terbaru ke terlama?
 // User: mencetak daftar petugas sholat jumat selama 1 tahun. Kita urutkan ascending (dari Januari - Desember)
 $tahunIni = date('Y');
-$stmtJumat = $pdo->query("SELECT * FROM petugas_jumat WHERE YEAR(tanggal) = '$tahunIni' ORDER BY tanggal ASC");
+$stmtJumat = $pdo->prepare("SELECT * FROM petugas_jumat WHERE YEAR(tanggal) = :tahun ORDER BY tanggal ASC");
+$stmtJumat->execute([':tahun' => $tahunIni]);
 $jadwal = $stmtJumat->fetchAll();
 
 // Jika ingin mengambil semua data (jika mau mencetak keseluruhan)

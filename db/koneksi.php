@@ -345,10 +345,13 @@ function saveRunningTextTable($rtArr) {
     $pdo = getDbConnection();
     $pdo->exec("DELETE FROM running_text");
     $stmt = $pdo->prepare(
-        "INSERT INTO running_text (teks, sort_order) VALUES (:teks, :sort_order)"
+        "INSERT INTO running_text (teks, is_active, sort_order) VALUES (:teks, :is_active, :sort_order)"
     );
     foreach ($rtArr as $i => $v) {
-        $stmt->execute([':teks' => $v, ':sort_order' => $i]);
+        // $v adalah array [teks, is_active]
+        $teks     = is_array($v) ? $v[0] : $v;
+        $isActive = is_array($v) ? ($v[1] ? 1 : 0) : 1;
+        $stmt->execute([':teks' => $teks, ':is_active' => $isActive, ':sort_order' => $i]);
     }
 }
 ?>

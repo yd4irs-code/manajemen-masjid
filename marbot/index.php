@@ -2,6 +2,7 @@
 include_once "session.php";
 if(!isset($_SESSION["user_id"])){
 	header("Location: login.php");
+	exit;
 }
 require_once '../db/koneksi.php';
 $name = '';

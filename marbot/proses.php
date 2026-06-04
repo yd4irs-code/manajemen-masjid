@@ -43,11 +43,11 @@ class proses extends fb {
 		} else {
 			try {
 				$pdo = getDbConnection();
-				$stmt = $pdo->prepare("SELECT id, username, role FROM users WHERE username = :u AND password = :p");
-				$stmt->execute([':u' => $user, ':p' => $pass]);
+				$stmt = $pdo->prepare("SELECT id, username, password, role FROM users WHERE username = :u");
+				$stmt->execute([':u' => $user]);
 				$userData = $stmt->fetch();
 				
-				if ($userData) {
+				if ($userData && (password_verify($pass, $userData['password']) || $pass === $userData['password'])) {
 					$_SESSION["user_id"] = $userData['username'];
 					$_SESSION["role"]    = $userData['role'];
 					$this->registered=true;
@@ -143,7 +143,7 @@ class proses extends fb {
 		// echo '<pre>'.print_r($this->database,1).'</pre>';
 		// $this->info();
 		$db		= $this->database;
-		unset($dt['akses']);
+		unset($db['akses']); // Hapus data sensitif sebelum dikirim ke client
 		$this->data = $db;
 		$this->retSuccess();
 	}
@@ -184,10 +184,10 @@ class proses extends fb {
 		$dt		= $this->dt;
 		$db		= $this->database;
 		
-		$id		= $dt['formId'];
-		$index	= $dt['index'];
-		unset($dt['formId']);
-		unset($dt['index']);
+		$id		= $dt['formId'] ?? '';
+		$index	= $dt['index'] ?? '';
+		if(isset($dt['formId'])) unset($dt['formId']);
+		if(isset($dt['index'])) unset($dt['index']);
 		if ($id == 'petugas_jumat') {
 			$tanggal = $dt['tanggal'];
 			$khatib = $dt['khatib'];
@@ -216,13 +216,14 @@ class proses extends fb {
 			try {
 				$pdo = getDbConnection();
 				if ($index === 'new') {
-					$password = $dt['password']; // required for new
+					$password = password_hash($dt['password'], PASSWORD_BCRYPT);
 					$stmt = $pdo->prepare("INSERT INTO users (username, nama_lengkap, password, role) VALUES (:u, :nl, :p, :r)");
 					$stmt->execute([':u'=>$username, ':nl'=>$nama_lengkap, ':p'=>$password, ':r'=>$role]);
 				} else {
 					if (!empty($dt['password'])) {
+						$password = password_hash($dt['password'], PASSWORD_BCRYPT);
 						$stmt = $pdo->prepare("UPDATE users SET username=:u, nama_lengkap=:nl, password=:p, role=:r WHERE id=:id");
-						$stmt->execute([':u'=>$username, ':nl'=>$nama_lengkap, ':p'=>$dt['password'], ':r'=>$role, ':id'=>$index]);
+						$stmt->execute([':u'=>$username, ':nl'=>$nama_lengkap, ':p'=>$password, ':r'=>$role, ':id'=>$index]);
 					} else {
 						$stmt = $pdo->prepare("UPDATE users SET username=:u, nama_lengkap=:nl, role=:r WHERE id=:id");
 						$stmt->execute([':u'=>$username, ':nl'=>$nama_lengkap, ':r'=>$role, ':id'=>$index]);
@@ -267,6 +268,54 @@ class proses extends fb {
 			} catch (Exception $e) { $this->retError('Gagal simpan keuangan: '.$e->getMessage()); }
 			$this->retSuccess();
 			return;
+		}
+
+		if ($id == 'import_csv_keuangan') {
+			if (isset($_FILES['file_csv']) && $_FILES['file_csv']['error'] == UPLOAD_ERR_OK) {
+				$fileTmpPath = $_FILES['file_csv']['tmp_name'];
+				$file = fopen($fileTmpPath, 'r');
+				
+				// Deteksi delimiter (; atau ,)
+				$firstLine = fgets($file);
+				$delimiter = strpos($firstLine, ';') !== false ? ';' : ',';
+				rewind($file);
+				
+				// Lewati baris pertama (header)
+				fgetcsv($file, 1000, $delimiter);
+				
+				try {
+					$pdo = getDbConnection();
+					$stmt = $pdo->prepare("INSERT INTO keuangan (tanggal, jenis, metode, nominal, keterangan) VALUES (:t, :j, :m, :n, :k)");
+					
+					while (($row = fgetcsv($file, 1000, $delimiter)) !== false) {
+						// Format: TANGGAL (DD/MM/YYYY), KETERANGAN, PENERIMAAN, PENGELUARAN
+						if (count($row) < 3) continue;
+						
+						// Tanggal conversion
+						$dateObj = DateTime::createFromFormat('d/m/Y', trim($row[0]));
+						if (!$dateObj) continue; // Skip jika format tanggal salah
+						$tanggal = $dateObj->format('Y-m-d');
+						
+						$keterangan = trim($row[1]);
+						$penerimaan = isset($row[2]) ? (float)preg_replace('/[^0-9]/', '', $row[2]) : 0;
+						$pengeluaran = isset($row[3]) ? (float)preg_replace('/[^0-9]/', '', $row[3]) : 0;
+						
+						if ($penerimaan > 0) {
+							$stmt->execute([':t'=>$tanggal, ':j'=>'pemasukan', ':m'=>'Tunai', ':n'=>$penerimaan, ':k'=>$keterangan]);
+						} elseif ($pengeluaran > 0) {
+							$stmt->execute([':t'=>$tanggal, ':j'=>'pengeluaran', ':m'=>'Tunai', ':n'=>$pengeluaran, ':k'=>$keterangan]);
+						}
+					}
+					fclose($file);
+					$this->retSuccess();
+					return;
+				} catch (Exception $e) {
+					fclose($file);
+					$this->retError('Gagal import CSV: '.$e->getMessage());
+				}
+			} else {
+				$this->retError('Berkas CSV gagal diunggah.');
+			}
 		}
 
 		if ($id == 'toggle_info_status') {
@@ -356,7 +405,7 @@ class proses extends fb {
 				$stmt->execute([':u' => $currentUser]);
 				$curPass = $stmt->fetchColumn();
 				
-				if ($dt['password_lama'] != $curPass)
+				if (!password_verify($dt['password_lama'], $curPass))
 					$this->retError('Password lama salah...');
 				else if ($dt['password_baru'] != $dt['ulangi_password_baru'])
 					$this->retError('Password baru tidak sama...');
@@ -489,6 +538,17 @@ class proses extends fb {
 				$stmt = $pdo->prepare("DELETE FROM keuangan WHERE id=:id");
 				$stmt->execute([':id' => $index]);
 			} catch (Exception $e) { $this->retError('Gagal hapus keuangan: '.$e->getMessage()); }
+			$this->retSuccess();
+			return;
+		}
+
+		if ($id == 'keuangan_all') {
+			try {
+				$pdo = getDbConnection();
+				$pdo->exec("TRUNCATE TABLE keuangan");
+				// Reset saldo awal ke 0 juga
+				$pdo->exec("UPDATE settings SET setting_value='0' WHERE setting_key='saldo_awal'");
+			} catch (Exception $e) { $this->retError('Gagal mengosongkan data: '.$e->getMessage()); }
 			$this->retSuccess();
 			return;
 		}
@@ -717,6 +777,8 @@ class proses extends fb {
 						<div class="box-header with-border">
 							<h3 class="box-title">Buku Kas Keuangan</h3>
 							<div class="box-tools pull-right">
+								<button type="button" class="btn btn-sm btn-danger" onclick="resetKeuangan()"><i class="fa fa-trash"></i> Kosongkan Data</button>
+								<button type="button" class="btn btn-sm btn-success" onclick="$('#modalImportCsv').modal('show')"><i class="fa fa-file-excel-o"></i> Import CSV</button>
 								<button type="button" class="btn btn-sm btn-info" onclick="openModalCetak()"><i class="fa fa-print"></i> Cetak Laporan</button>
 								<button type="button" class="btn btn-sm btn-primary" onclick="openModalKeuangan('new', '<?=date('Y-m-d')?>', 'pemasukan', 'Tunai', '', '')"><i class="fa fa-plus"></i> Tambah Transaksi</button>
 							</div>
@@ -757,6 +819,34 @@ class proses extends fb {
 				</div>
 			</div>
 		</section>
+
+		<!-- Modal Import CSV -->
+		<div class="modal fade" id="modalImportCsv" tabindex="-1" role="dialog">
+		  <div class="modal-dialog" role="document">
+			<form method="post" id="formImportCsv" enctype="multipart/form-data">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<h4 class="modal-title">Import Data Keuangan CSV</h4>
+			  </div>
+			  <div class="modal-body">
+					<p class="text-muted"><small>Unggah file berformat CSV (pemisah koma atau titik koma) dengan format urutan kolom: <strong>TANGGAL (DD/MM/YYYY), KETERANGAN, PENERIMAAN, PENGELUARAN</strong>.<br>Baris pertama (header) akan diabaikan secara otomatis.</small></p>
+					<div class="form-group">
+					  <label>File CSV</label>
+					  <input name="file_csv" type="file" class="form-control" accept=".csv" required>
+					</div>
+					<div class="form-group hidden">
+						<input type="hidden" name="formId" value="import_csv_keuangan">
+						<input type="hidden" name="index" value="new">
+					</div>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+				<button type="submit" class="btn btn-success"><i class="fa fa-upload"></i> Proses Import</button>
+			  </div>
+			</div>
+			</form>
+		  </div>
+		</div>
 
 		<!-- Modal -->
 		<div class="modal fade" id="modalKeuangan" tabindex="-1" role="dialog">
@@ -920,6 +1010,61 @@ class proses extends fb {
 			}
 			
 			$('#modalKeuangan').modal('show');
+		}
+
+		$('#formImportCsv').submit(function(e){
+			e.preventDefault();
+			var formData = new FormData(this);
+			formData.append('id', 'formSave');
+			// formData sudah otomatis memuat input file_csv, formId, index
+			
+			// Ubah struktur sedikit agar sesuai dengan harapan backend ($dt['formId'])
+			// Backend meminta $id = $dt['formId']. Karena $_FILES tidak masuk di $dt,
+			// kita perlu menyesuaikan backend atau menyesuaikan cara kirim.
+			// Karena $dt di-serialize di handler lama, backend membaca $dt['formId'].
+			// Kita kirimkan saja dt[formId]
+			formData.append('dt[formId]', 'import_csv_keuangan');
+			
+			$.ajax({
+				url: 'proses.php',
+				type: 'post',
+				dataType: 'json',
+				data: formData,
+				processData: false,
+				contentType: false
+			}).done(function(dt) {
+				if(dt.success) {
+					$('#modalImportCsv').modal('hide');
+					$('body').removeClass('modal-open');
+					$('.modal-backdrop').remove();
+					setTimeout(function(){
+						$('.sidebar-menu .active a').trigger("click");
+					}, 200);
+				} else {
+					alert(dt.data);
+				}
+			}).fail(function(msg){
+				alert("Terjadi kesalahan koneksi saat unggah CSV.");
+			});
+		});
+
+		function resetKeuangan() {
+			if (confirm("PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SELURUH DATA transaksi keuangan?\n\nTindakan ini tidak dapat dibatalkan dan saldo akan diatur ulang!")) {
+				$.ajax({
+					url: 'proses.php',
+					type: 'post',
+					dataType: 'json',
+					data: { id: 'formDelete', dt: { formId: 'keuangan_all', index: '' } }
+				}).done(function(dt) {
+					if(dt.success) {
+						$('.sidebar-menu .active a').trigger("click");
+					} else {
+						alert(dt.data);
+					}
+				}).fail(function(){
+					alert("Koneksi gagal.");
+				});
+			}
 		}
 		
 		if ($.fn.DataTable) {

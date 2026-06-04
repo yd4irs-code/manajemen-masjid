@@ -107,13 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $pdo = getDbConnection();
             
             // Insert initial settings
-            $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v) ON DUPLICATE KEY UPDATE setting_value=:v");
-            $stmt->execute([':k' => 'nama', ':v' => $nama_masjid]);
-            $stmt->execute([':k' => 'lokasi', ':v' => $lokasi]);
+            $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v1) ON DUPLICATE KEY UPDATE setting_value=:v2");
+            $stmt->execute([':k' => 'nama', ':v1' => $nama_masjid, ':v2' => $nama_masjid]);
+            $stmt->execute([':k' => 'lokasi', ':v1' => $lokasi, ':v2' => $lokasi]);
             
             // Insert Default Admin
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, nama_lengkap, role) VALUES (:u, :p, 'Administrator', 'admin') ON DUPLICATE KEY UPDATE password=:p");
-            $stmt->execute([':u' => $admin_user, ':p' => $admin_pass]);
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, nama_lengkap, role) VALUES (:u, :p1, 'Administrator', 'admin') ON DUPLICATE KEY UPDATE password=:p2");
+            $stmt->execute([':u' => $admin_user, ':p1' => $admin_pass, ':p2' => $admin_pass]);
             
             header("Location: installer.php?step=4");
             exit;
