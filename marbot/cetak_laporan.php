@@ -222,7 +222,7 @@ $namaBendahara = $stmtBen->fetchColumn() ?: '(............................)';
         </table>
 
         <div class="signature">
-            <p>Palembang, <?= date('d F Y') ?></p>
+            <p>Palembang, <?= date('d') ?> <?php $bln = [1=>'Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']; echo $bln[(int)date('m')]; ?> <?= date('Y') ?></p>
             <p>Bendahara,</p>
             <div class="name"><?= htmlspecialchars($namaBendahara) ?></div>
         </div>
