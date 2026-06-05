@@ -77,6 +77,8 @@ Panel administrasi berbasis web yang dapat diakses dari komputer/HP pengurus. Di
   - Jum'at (Jum'at lalu s/d hari ini)
   - Bulanan (pilih bulan & tahun)
   - Seluruh transaksi
+- **Anti-Cache Laporan**: Data yang dicetak dijamin selalu sinkron dengan database terbaru (bebas dari isu *browser cache*).
+- **Format Laporan Baku**: Menggunakan format penanggalan bahasa Indonesia (contoh: *05 Juni 2026*) serta zona waktu `Asia/Jakarta` untuk akurasi stempel waktu (timestamp) pencetakan.
 - **Tanda Tangan Bendahara**: Nama bendahara otomatis tertera di laporan cetak.
 
 ---
@@ -188,7 +190,9 @@ masjid/
 
 ## 🔄 Cara Kerja Sinkronisasi Otomatis
 
-Setiap kali pengurus menyimpan perubahan melalui panel admin, sistem menulis *timestamp* baru ke file `db/last_updated.txt`. Layar TV melakukan pengecekan ke `check_update.php` **setiap 1 detik**. Jika timestamp berubah, browser Display akan **otomatis refresh** tanpa perlu intervensi manual.
+Setiap kali pengurus menyimpan perubahan melalui panel admin (informasi, kas, running text, dll.), sistem menulis *timestamp* baru ke file `db/last_updated.txt`. Layar TV melakukan pengecekan ke endpoint `check_update.php` **setiap 1 detik**. 
+
+Selain itu, endpoint ini juga menyertakan informasi **Tanggal Hari Ini**. Jika timestamp berubah (karena ada pembaruan data) ATAU jika tanggal berubah (pergantian hari di tengah malam), browser Display akan **otomatis refresh** tanpa perlu intervensi manual. Hal ini menjamin bahwa jadwal hari Jum'at yang telah lewat akan langsung terganti menjadi jadwal minggu depan secara otomatis pada Sabtu dini hari.
 
 ```
 Panel Admin simpan data
