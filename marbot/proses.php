@@ -235,6 +235,7 @@ class proses extends fb {
 		}
 		
 		if ($id == 'saldo_awal') {
+			if ($_SESSION['role'] === 'marbot') $this->retError('Akses ditolak: Marbot tidak dapat mengatur saldo awal.');
 			$nominal = $dt['nominal'];
 			try {
 				$pdo = getDbConnection();
@@ -251,6 +252,7 @@ class proses extends fb {
 		}
 
 		if ($id == 'keuangan') {
+			if ($_SESSION['role'] === 'marbot') $this->retError('Akses ditolak: Marbot tidak dapat menambah atau mengubah transaksi keuangan.');
 			$tanggal = $dt['tanggal'];
 			$jenis = $dt['jenis'];
 			$metode = $dt['metode'] ?? 'Tunai';
@@ -534,6 +536,7 @@ class proses extends fb {
 		}
 		
 		if ($id == 'keuangan') {
+			if ($_SESSION['role'] === 'marbot') $this->retError('Akses ditolak: Marbot tidak dapat menghapus transaksi keuangan.');
 			try {
 				$pdo = getDbConnection();
 				$stmt = $pdo->prepare("DELETE FROM keuangan WHERE id=:id");
@@ -772,7 +775,9 @@ class proses extends fb {
 				<div class="col-md-12 col-sm-12 col-xs-12">
 					<div class="alert alert-info" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 15px;">
 						<h4 style="margin:0;"><i class="fa fa-money"></i> Saldo Kas Saat Ini: Rp <?=number_format((float)$saldo, 0, ',', '.')?></h4>
+						<?php if ($_SESSION['role'] !== 'marbot'): ?>
 						<button type="button" class="btn btn-sm btn-default text-black" onclick="openModalSaldoAwal(<?=$sAwal?>)"><i class="fa fa-pencil"></i> Atur Saldo Awal</button>
+						<?php endif; ?>
 					</div>
 					
 					<div class="box box-success">
@@ -784,7 +789,9 @@ class proses extends fb {
 								<button type="button" class="btn btn-sm btn-success" onclick="$('#modalImportCsv').modal('show')"><i class="fa fa-file-excel-o"></i> Import CSV</button>
 								<?php endif; ?>
 								<button type="button" class="btn btn-sm btn-info" onclick="openModalCetak()"><i class="fa fa-print"></i> Cetak Laporan</button>
+								<?php if ($_SESSION['role'] !== 'marbot'): ?>
 								<button type="button" class="btn btn-sm btn-primary" onclick="openModalKeuangan('new', '<?=date('Y-m-d')?>', 'pemasukan', 'Tunai', '', '')"><i class="fa fa-plus"></i> Tambah Transaksi</button>
+								<?php endif; ?>
 							</div>
 						</div>
 						<div class="box-body table-responsive">
@@ -811,9 +818,13 @@ class proses extends fb {
 										<td><?=$v['metode']?></td>
 										<td style="white-space: pre-wrap; word-wrap: break-word; max-width: 250px;"><?=htmlspecialchars($v['keterangan'])?></td>
 										<td class="text-right"><?=number_format($v['nominal'], 0, ',', '.')?></td>
+										<?php if ($_SESSION['role'] !== 'marbot'): ?>
 										<td>
 											<button class="btn btn-sm btn-warning" onclick='openModalKeuangan("<?=$v['id']?>", "<?=$v['tanggal']?>", "<?=$v['jenis']?>", "<?=$v['metode']?>", "<?=$v['nominal']?>", <?=htmlspecialchars(json_encode($v['keterangan']), ENT_QUOTES)?>)'><i class="fa fa-pencil"></i> Edit</button>
 										</td>
+										<?php else: ?>
+										<td class="text-center">-</td>
+										<?php endif; ?>
 									</tr>
 									<?php endforeach; ?>
 								</tbody>
