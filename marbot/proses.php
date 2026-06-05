@@ -247,6 +247,7 @@ class proses extends fb {
 				}
 				$stmt->execute([':v'=>$nominal]);
 			} catch (Exception $e) { $this->retError('Gagal set saldo: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -268,6 +269,7 @@ class proses extends fb {
 					$stmt->execute([':t'=>$tanggal, ':j'=>$jenis, ':m'=>$metode, ':n'=>$nominal, ':k'=>$keterangan, ':id'=>$index]);
 				}
 			} catch (Exception $e) { $this->retError('Gagal simpan keuangan: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -310,6 +312,7 @@ class proses extends fb {
 						}
 					}
 					fclose($file);
+					$this->updateSync();
 					$this->retSuccess();
 					return;
 				} catch (Exception $e) {
@@ -330,6 +333,7 @@ class proses extends fb {
 					$stmt->execute([':id'=>$ids[$index]]);
 				}
 			} catch (Exception $e) { $this->retError('Gagal update status: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -355,6 +359,7 @@ class proses extends fb {
 					}
 				}
 			} catch (Exception $e) { $this->retError('Gagal simpan info: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -368,6 +373,7 @@ class proses extends fb {
 					$stmt->execute([':id'=>$ids[$index]]);
 				}
 			} catch (Exception $e) { $this->retError('Gagal update status rt: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -389,6 +395,7 @@ class proses extends fb {
 					}
 				}
 			} catch (Exception $e) { $this->retError('Gagal simpan running_text: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -434,6 +441,7 @@ class proses extends fb {
 		
 		$this->database = array_merge($this->database, $db);
 		$this->saveDatabase();
+		$this->updateSync();
 		$this->retSuccess();
 	}
 	
@@ -457,7 +465,7 @@ class proses extends fb {
 			}
 		}
 		
-		
+		$this->updateSync();
 		$this->retSuccess();
 	}
 	
@@ -480,6 +488,7 @@ class proses extends fb {
 				$i++;
 			}
 		}
+		$this->updateSync();
 		$this->retSuccess();
 	}
 	
@@ -505,6 +514,7 @@ class proses extends fb {
 			$file	= $this->dt;
 			// $this->retError($file);die;
 			if(file_exists($dir.$file)) unlink($dir.$file);
+			$this->updateSync();
 			$this->retSuccess();
 		}
 	}
@@ -542,6 +552,7 @@ class proses extends fb {
 				$stmt = $pdo->prepare("DELETE FROM keuangan WHERE id=:id");
 				$stmt->execute([':id' => $index]);
 			} catch (Exception $e) { $this->retError('Gagal hapus keuangan: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -554,6 +565,7 @@ class proses extends fb {
 				// Reset saldo awal ke 0 juga
 				$pdo->exec("UPDATE settings SET setting_value='0' WHERE setting_key='saldo_awal'");
 			} catch (Exception $e) { $this->retError('Gagal mengosongkan data: '.$e->getMessage()); }
+			$this->updateSync();
 			$this->retSuccess();
 			return;
 		}
@@ -570,6 +582,7 @@ class proses extends fb {
 						$stmt->execute([':id' => $ids[$index]]);
 					}
 				} catch (Exception $e) { $this->retError('Gagal hapus info: '.$e->getMessage()); }
+				$this->updateSync();
 				$this->retSuccess();
 			}
 			return;
@@ -587,6 +600,7 @@ class proses extends fb {
 						$stmt->execute([':id' => $ids[$index]]);
 					}
 				} catch (Exception $e) { $this->retError('Gagal hapus running_text: '.$e->getMessage()); }
+				$this->updateSync();
 				$this->retSuccess();
 			}
 			return;
