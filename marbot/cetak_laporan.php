@@ -4,6 +4,8 @@ if (empty($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'benda
     die("Akses ditolak");
 }
 
+date_default_timezone_set('Asia/Jakarta'); // WIB (UTC+7)
+
 require_once '../db/koneksi.php';
 $pdo = getDbConnection();
 
