@@ -6,6 +6,11 @@ if (empty($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'benda
 
 date_default_timezone_set('Asia/Jakarta'); // WIB (UTC+7)
 
+// Cegah browser menyimpan cache halaman cetak
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: Thu, 01 Jan 1970 00:00:00 GMT");
+
 require_once '../db/koneksi.php';
 $pdo = getDbConnection();
 

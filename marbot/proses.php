@@ -973,8 +973,10 @@ class proses extends fb {
 						  </select>
 						</div>
 					</div>
-			  </div>
-			  <div class="modal-footer">
+					<!-- Timestamp unik agar browser tidak cache halaman cetak -->
+				<input type="hidden" name="_t" id="cetakTimestamp" value="">
+		  </div><!-- /.modal-body -->
+		  <div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
 				<button type="submit" class="btn btn-primary" onclick="$('#modalCetak').modal('hide')"><i class="fa fa-print"></i> Cetak</button>
 			  </div>
@@ -991,6 +993,10 @@ class proses extends fb {
 		function openModalCetak() {
 			$('#modalCetak').modal('show');
 		}
+		// Isi timestamp saat tombol Cetak diklik agar URL selalu unik (anti cache)
+		$('.form-cetak').on('submit', function() {
+			$('#cetakTimestamp').val(Date.now());
+		});
 		function toggleBulanTahun() {
 			if ($('#cetakPeriode').val() === 'bulanan') {
 				$('#wrapBulanTahun').show();
